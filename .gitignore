@@ -131,3 +131,6 @@ dmypy.json
 # Linters etc.
 .pre-commit-config.yaml
 cspell.config.yaml
+
+# Vim
+*.swp
