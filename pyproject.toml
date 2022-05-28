@@ -19,3 +19,6 @@ build-backend = "poetry.core.masonry.api"
 pythonpath = [
   "src"
 ]
+
+[mypy]
+mypy_path = "src"

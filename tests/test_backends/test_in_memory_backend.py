@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 
-from backends import in_memory_backend
+from per_object_permissions.backends import in_memory_backend
 
 
 @pytest.fixture(scope="module")
@@ -105,13 +105,21 @@ def subject_three_write_object_A(subject_three_uuid, write, object_A_uuid):
     return (subject_three_uuid, write, object_A_uuid)
 
 
-def test_create_one_triple(subject_one_read_object_A):
+def test_create_one_triple_should_be_persisted(subject_one_read_object_A):
     backend = in_memory_backend.InMemoryBackend()
 
     subject_uuid, predicate, object_uuid = subject_one_read_object_A
     backend.create(subject_uuid, predicate, object_uuid)
 
     assert set(backend) == {subject_one_read_object_A}
+
+
+def test_create_one_triple_should_be_returned(subject_one_read_object_B):
+    backend = in_memory_backend.InMemoryBackend()
+
+    resulting_triple = backend.create(*subject_one_read_object_B)
+
+    assert resulting_triple == subject_one_read_object_B
 
 
 def test_create_two_triples(
@@ -351,3 +359,109 @@ def test_read_specifying_object_uuids_subject_uuids_and_predicates(
     assert results == {subject_one_read_object_A, subject_one_write_object_A,
                        subject_two_read_object_A, subject_two_write_object_A,
                        subject_two_write_object_C}
+
+
+def test_delete_subject(
+    subject_one_read_object_A,
+    subject_one_read_object_B,
+    subject_two_write_object_C,
+    subject_three_write_object_A,
+    subject_one_uuid
+):
+    backend = in_memory_backend.InMemoryBackend(
+        initial_data=(
+            subject_one_read_object_A,
+            subject_one_read_object_B,
+            subject_two_write_object_C,
+            subject_three_write_object_A,
+        )
+    )
+
+    backend.delete(subject_uuids=[subject_one_uuid])
+
+    assert set(backend) == {subject_two_write_object_C, subject_three_write_object_A}
+
+
+def test_delete_predicate(
+    subject_one_read_object_A,
+    subject_one_delete_object_C,
+    subject_three_write_object_A,
+    read,
+):
+    backend = in_memory_backend.InMemoryBackend(
+        initial_data=(
+            subject_one_read_object_A,
+            subject_one_delete_object_C,
+            subject_three_write_object_A,
+        )
+    )
+
+    backend.delete(predicates=[read])
+
+    assert set(backend) == {subject_one_delete_object_C, subject_three_write_object_A}
+
+
+def test_delete_object(
+    subject_one_read_object_A,
+    subject_one_read_object_B,
+    subject_one_delete_object_C,
+    object_A_uuid,
+):
+    backend = in_memory_backend.InMemoryBackend(
+        initial_data=(
+            subject_one_read_object_A,
+            subject_one_read_object_B,
+            subject_one_delete_object_C,
+        )
+    )
+
+    backend.delete(object_uuids=[object_A_uuid])
+
+    assert set(backend) == {subject_one_read_object_B, subject_one_delete_object_C}
+
+
+def test_delete_based_on_subject_predicate_and_object(
+    subject_one_delete_object_A,
+    subject_one_delete_object_C,
+    subject_one_read_object_A,
+    subject_one_read_object_B,
+    subject_one_write_object_A,
+    subject_two_read_object_A,
+    subject_two_write_object_B,
+    subject_two_write_object_C,
+    subject_three_read_object_A,
+    subject_three_write_object_A,
+    subject_one_uuid,
+    write,
+    delete,
+    object_A_uuid,
+):
+    backend = in_memory_backend.InMemoryBackend(
+        initial_data=(
+            subject_one_delete_object_A,
+            subject_one_delete_object_C,
+            subject_one_read_object_A,
+            subject_one_read_object_B,
+            subject_one_write_object_A,
+            subject_two_read_object_A,
+            subject_two_write_object_B,
+            subject_two_write_object_C,
+            subject_three_read_object_A,
+            subject_three_write_object_A,
+        )
+    )
+
+    backend.delete(subject_uuids=[subject_one_uuid],
+                   predicates=[write, delete],
+                   object_uuids=[object_A_uuid])
+
+    assert set(backend) == {
+        subject_one_delete_object_C,
+        subject_one_read_object_A,
+        subject_one_read_object_B,
+        subject_two_read_object_A,
+        subject_two_write_object_B,
+        subject_two_write_object_C,
+        subject_three_read_object_A,
+        subject_three_write_object_A,
+    }
