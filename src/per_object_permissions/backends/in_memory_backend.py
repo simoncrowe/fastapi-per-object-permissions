@@ -1,7 +1,11 @@
+from collections import namedtuple
 from typing import Callable, Iterable, Set, Tuple
 from uuid import UUID
 
-from per_object_permissions.protocols import PerObjectPermissionBackend
+from per_object_permissions.protocols import (PermTriple,
+                                              PerObjectPermissionBackend)
+
+Triple = namedtuple("PermTriple", ["subject_uuid", "predicate", "object_uuid"])
 
 
 def _filter_pred(subject_uuids: Iterable[UUID] = None,
@@ -33,14 +37,13 @@ class InMemoryBackend(PerObjectPermissionBackend):
     def __iter__(self):
         return iter(self._data)
 
-    def create(self,
-               subject_uuid: UUID,
-               predicate: str,
-               object_uuid: UUID) -> Tuple[UUID, str, UUID]:
-
-        triple = (subject_uuid, predicate, object_uuid)
-        self._data.add(triple)
-        return triple
+    def create(self, perms: Iterable[PermTriple]) -> Set[PermTriple]:
+        triples = [
+            Triple(perm.subject_uuid, perm.predicate, perm.object_uuid)
+            for perm in perms
+        ]
+        self._data.update(triples)
+        return triples
 
     def read(self,
              subject_uuids: Iterable[UUID] = None,

@@ -1,115 +1,71 @@
-import uuid
+from collections import namedtuple
 
 import pytest
 
 from per_object_permissions.backends import in_memory_backend
 
-
-@pytest.fixture(scope="module")
-def read():
-    return "read"
-
-
-@pytest.fixture(scope="module")
-def write():
-    return "write"
-
-
-@pytest.fixture(scope="module")
-def delete():
-    return "delete"
-
-
-@pytest.fixture(scope="module")
-def subject_one_uuid():
-    return uuid.uuid4()
-
-
-@pytest.fixture(scope="module")
-def subject_two_uuid():
-    return uuid.uuid4()
-
-
-@pytest.fixture(scope="module")
-def subject_three_uuid():
-    return uuid.uuid4()
-
-
-@pytest.fixture(scope="module")
-def object_A_uuid():
-    return uuid.uuid4()
-
-
-@pytest.fixture(scope="module")
-def object_B_uuid():
-    return uuid.uuid4()
-
-
-@pytest.fixture(scope="module")
-def object_C_uuid():
-    return uuid.uuid4()
+Triple = namedtuple("PermTriple", ["subject_uuid", "predicate", "object_uuid"])
 
 
 @pytest.fixture(scope="module")
 def subject_one_read_object_A(subject_one_uuid, read, object_A_uuid):
-    return (subject_one_uuid, read, object_A_uuid)
+    return Triple(subject_one_uuid, read, object_A_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_one_write_object_A(subject_one_uuid, write, object_A_uuid):
-    return (subject_one_uuid, write, object_A_uuid)
+    return Triple(subject_one_uuid, write, object_A_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_one_delete_object_A(subject_one_uuid, delete, object_A_uuid):
-    return (subject_one_uuid, delete, object_A_uuid)
+    return Triple(subject_one_uuid, delete, object_A_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_one_read_object_B(subject_one_uuid, read, object_B_uuid):
-    return (subject_one_uuid, delete, object_A_uuid)
+    return Triple(subject_one_uuid, read, object_B_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_one_delete_object_C(subject_one_uuid, delete, object_C_uuid):
-    return (subject_one_uuid, delete, object_C_uuid)
+    return Triple(subject_one_uuid, delete, object_C_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_two_read_object_A(subject_two_uuid, read, object_A_uuid):
-    return (subject_two_uuid, read, object_A_uuid)
+    return Triple(subject_two_uuid, read, object_A_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_two_write_object_A(subject_two_uuid, write, object_A_uuid):
-    return (subject_two_uuid, write, object_A_uuid)
+    return Triple(subject_two_uuid, write, object_A_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_two_write_object_B(subject_two_uuid, write, object_B_uuid):
-    return (subject_two_uuid, write, object_B_uuid)
+    return Triple(subject_two_uuid, write, object_B_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_two_write_object_C(subject_two_uuid, write, object_C_uuid):
-    return (subject_two_uuid, write, object_C_uuid)
+    return Triple(subject_two_uuid, write, object_C_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_three_read_object_A(subject_three_uuid, read, object_A_uuid):
-    return (subject_three_uuid, read, object_A_uuid)
+    return Triple(subject_three_uuid, read, object_A_uuid)
 
 
 @pytest.fixture(scope="module")
 def subject_three_write_object_A(subject_three_uuid, write, object_A_uuid):
-    return (subject_three_uuid, write, object_A_uuid)
+    return Triple(subject_three_uuid, write, object_A_uuid)
 
 
 def test_create_one_triple_should_be_persisted(subject_one_read_object_A):
     backend = in_memory_backend.InMemoryBackend()
 
-    subject_uuid, predicate, object_uuid = subject_one_read_object_A
-    backend.create(subject_uuid, predicate, object_uuid)
+    backend.create([subject_one_read_object_A])
 
     assert set(backend) == {subject_one_read_object_A}
 
@@ -117,9 +73,9 @@ def test_create_one_triple_should_be_persisted(subject_one_read_object_A):
 def test_create_one_triple_should_be_returned(subject_one_read_object_B):
     backend = in_memory_backend.InMemoryBackend()
 
-    resulting_triple = backend.create(*subject_one_read_object_B)
+    resulting_triples = backend.create([subject_one_read_object_B])
 
-    assert resulting_triple == subject_one_read_object_B
+    assert resulting_triples == [subject_one_read_object_B]
 
 
 def test_create_two_triples(
@@ -128,9 +84,7 @@ def test_create_two_triples(
 ):
     backend = in_memory_backend.InMemoryBackend()
 
-    subject_uuid, predicate, object_uuid = subject_one_read_object_A
-    backend.create(subject_uuid, predicate, object_uuid)
-    backend.create(*subject_one_write_object_A)
+    backend.create([subject_one_read_object_A, subject_one_write_object_A])
 
     assert set(backend) == {subject_one_read_object_A,
                             subject_one_write_object_A}
@@ -139,9 +93,8 @@ def test_create_two_triples(
 def test_create_same_triple_twice(subject_one_read_object_A):
     backend = in_memory_backend.InMemoryBackend()
 
-    subject_uuid, predicate, object_uuid = subject_one_read_object_A
-    backend.create(subject_uuid, predicate, object_uuid)
-    backend.create(subject_uuid, predicate, object_uuid)
+    backend.create([subject_one_read_object_A])
+    backend.create([subject_one_read_object_A])
 
     assert set(backend) == {subject_one_read_object_A}
 
