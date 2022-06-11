@@ -33,7 +33,7 @@ def test_create_perm(client, subject_one_read_object_A_payload):
     response = client.post("/create_perms", json=payload)
 
     assert response.status_code == 200
-    assert response.json() == {"created": payload}
+    assert response.json() == {"created": [subject_one_read_object_A_payload]}
 
 
 def test_create_two_perms(
@@ -46,4 +46,7 @@ def test_create_two_perms(
     response = client.post("/create_perms", json=payload)
 
     assert response.status_code == 200
-    assert response.json() == {"created": payload}
+    response_data = response.json()
+    assert len(response_data["created"]) == 2
+    assert subject_one_read_object_A_payload in response_data["created"]
+    assert subject_one_write_object_A_payload in response_data["created"]

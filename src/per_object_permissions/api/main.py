@@ -28,8 +28,8 @@ def get_backend():
     return backend_class()
 
 
-@app.post("/create_perms")
+@app.post("/create_perms", response_model=schema.CreatedBody)
 async def create_perms(perms: List[schema.PermTriple]):
     backend = get_backend()
     created_perms = backend.create(perms)
-    return {"created": created_perms}
+    return {"created": [perm._asdict() for perm in created_perms]}
