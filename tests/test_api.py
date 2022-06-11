@@ -10,7 +10,7 @@ def client():
 
 
 @pytest.fixture(scope="module")
-def subject_one_read_object_A_payload(subject_one_uuid, read, object_A_uuid):
+def subject_one_read_object_A_data(subject_one_uuid, read, object_A_uuid):
     return {
         "subject_uuid": str(subject_one_uuid),
         "predicate": read,
@@ -19,7 +19,7 @@ def subject_one_read_object_A_payload(subject_one_uuid, read, object_A_uuid):
 
 
 @pytest.fixture(scope="module")
-def subject_one_write_object_A_payload(subject_one_uuid, write, object_A_uuid):
+def subject_one_write_object_A_data(subject_one_uuid, write, object_A_uuid):
     return {
         "subject_uuid": str(subject_one_uuid),
         "predicate": write,
@@ -27,21 +27,21 @@ def subject_one_write_object_A_payload(subject_one_uuid, write, object_A_uuid):
     }
 
 
-def test_create_perm(client, subject_one_read_object_A_payload):
-    payload = [subject_one_read_object_A_payload]
+def test_create_perm(client, subject_one_read_object_A_data):
+    payload = [subject_one_read_object_A_data]
 
     response = client.post("/create_perms", json=payload)
 
     assert response.status_code == 200
-    assert response.json() == {"created": [subject_one_read_object_A_payload]}
+    assert response.json() == {"created": [subject_one_read_object_A_data]}
 
 
 def test_create_two_perms(
     client,
     subject_one_read_object_A_payload,
-    subject_one_write_object_A_payload
+    subject_one_write_object_A_data
 ):
-    payload = [subject_one_read_object_A_payload, subject_one_write_object_A_payload]
+    payload = [subject_one_read_object_A_payload, subject_one_write_object_A_data]
 
     response = client.post("/create_perms", json=payload)
 
@@ -49,4 +49,4 @@ def test_create_two_perms(
     response_data = response.json()
     assert len(response_data["created"]) == 2
     assert subject_one_read_object_A_payload in response_data["created"]
-    assert subject_one_write_object_A_payload in response_data["created"]
+    assert subject_one_write_object_A_data in response_data["created"]
