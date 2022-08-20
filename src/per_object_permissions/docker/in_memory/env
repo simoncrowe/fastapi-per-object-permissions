@@ -1,0 +1,1 @@
+BACKEND="per_object_permissions.backends.in_memory_backend::InMemoryBackend"

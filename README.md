@@ -14,3 +14,14 @@ It doesn't matter what the entities are or whether they are stored in different 
 universally unique identifiers make it possible to populate per-object permissions for them.
 The simplicity of the data structure also means that it can be persisted in many types of databases
 including graph and key-value.
+
+# Testing and Running
+
+Different configurations of the app can be run using docker-compose files in the root of this repository. For example:
+
+```shell
+docker-compose -f docker-compose-in-memory.yml up
+```
+
+Once the image is built and the container is running, you should be
+able to read the Swagger docs at http://127.0.0.1:8008/docs
