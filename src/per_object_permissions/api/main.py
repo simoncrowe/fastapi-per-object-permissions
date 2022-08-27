@@ -4,7 +4,7 @@ A RESTful API would be cumbersome for use cases like bulk creation and deletion.
 Additionally, it would not add much value to identify permissions in URLs.
 A RPC approach is used instead.
 """
-from functools import lru_cache
+from functools import cache
 from importlib import import_module
 from typing import List
 
@@ -15,12 +15,12 @@ from per_object_permissions.api import config, schema
 app = fastapi.FastAPI()
 
 
-@lru_cache()
+@cache
 def get_settings():
     return config.Settings()
 
 
-@lru_cache()
+@cache
 def get_backend():
     settings = get_settings()
     module_path, class_name = settings.backend.split("::")
@@ -28,8 +28,15 @@ def get_backend():
     return backend_class()
 
 
-@app.post("/create_perms", response_model=schema.CreatedBody)
+@app.post("/create_perms", response_model=schema.CreateResults)
 async def create_perms(perms: List[schema.PermTriple]):
     backend = get_backend()
     created_perms = backend.create(perms)
     return {"created": [perm._asdict() for perm in created_perms]}
+
+
+@app.post("/read_perms", response_model=schema.ReadResults)
+async def read_perms(query: schema.PermQuery):
+    backend = get_backend()
+    perms = backend.read(**query.dict())
+    return {"results": [perm._asdict() for perm in perms]}
