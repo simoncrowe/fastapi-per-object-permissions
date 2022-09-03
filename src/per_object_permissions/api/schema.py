@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 import pydantic
 
@@ -10,5 +10,15 @@ class PermTriple(pydantic.BaseModel):
     object_uuid: uuid.UUID
 
 
-class CreatedBody(pydantic.BaseModel):
+class PermQuery(pydantic.BaseModel):
+    subject_uuids: Optional[List[uuid.UUID]]
+    predicates: Optional[List[str]]
+    object_uuids: Optional[List[uuid.UUID]]
+
+
+class CreateResults(pydantic.BaseModel):
     created: List[PermTriple]
+
+
+class ReadResults(pydantic.BaseModel):
+    results: List[PermTriple]
