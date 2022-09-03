@@ -71,6 +71,33 @@ def subject_two_delete_object_B_data(subject_two_uuid, delete, object_B_uuid):
 
 
 @pytest.fixture(scope="module")
+def subject_three_read_object_B_data(subject_three_uuid, read, object_B_uuid):
+    return {
+        "subject_uuid": str(subject_three_uuid),
+        "predicate": read,
+        "object_uuid": str(object_B_uuid)
+    }
+
+
+@pytest.fixture(scope="module")
+def subject_three_read_object_C_data(subject_three_uuid, read, object_C_uuid):
+    return {
+        "subject_uuid": str(subject_three_uuid),
+        "predicate": read,
+        "object_uuid": str(object_C_uuid)
+    }
+
+
+@pytest.fixture(scope="module")
+def subject_three_write_object_C_data(subject_three_uuid, write, object_C_uuid):
+    return {
+        "subject_uuid": str(subject_three_uuid),
+        "predicate": write,
+        "object_uuid": str(object_C_uuid)
+    }
+
+
+@pytest.fixture(scope="module")
 def all_data(
     subject_one_read_object_A_data,
     subject_one_write_object_A_data,
@@ -78,6 +105,9 @@ def all_data(
     subject_two_read_object_B_data,
     subject_two_write_object_A_data,
     subject_two_write_object_B_data,
+    subject_three_read_object_B_data,
+    subject_three_read_object_C_data,
+    subject_three_write_object_C_data,
 ):
     return [
         subject_one_read_object_A_data,
@@ -86,6 +116,9 @@ def all_data(
         subject_two_read_object_B_data,
         subject_two_write_object_A_data,
         subject_two_write_object_B_data,
+        subject_three_read_object_B_data,
+        subject_three_read_object_C_data,
+        subject_three_write_object_C_data,
     ]
 
 
@@ -128,8 +161,25 @@ def query_key_values_from_fixture_names(request: pytest.FixtureRequest,
 
 
 @pytest.mark.parametrize("query_fixture_names,result_fixture_names", [
-    ({"subject_uuids": ["subject_one_uuid"]},
-     ["subject_one_write_object_A_data", "subject_one_write_object_A_data"]),
+    (
+        {"subject_uuids": ["subject_one_uuid"]},
+        ["subject_one_read_object_A_data", "subject_one_write_object_A_data"]
+    ),
+    (
+        {"subject_uuids": ["subject_one_uuid", "subject_three_uuid"]},
+        ["subject_one_write_object_A_data", "subject_one_write_object_A_data",
+         "subject_three_read_object_B_data", "subject_three_read_object_C_data",
+         "subject_three_write_object_C_data"]
+    ),
+    (
+        {"subject_uuids": ["subject_one_uuid"], "predicates": ["write"]},
+        ["subject_one_write_object_A_data"]
+    ),
+    (
+        {"subject_uuids": ["subject_three_uuid"],
+         "predicates": ["write", "read", "delete"],
+         "object_uuids": ["object_C_uuid"]},
+        ["subject_three_read_object_C_data", "subject_three_write_object_C_data"]),
 ])
 def test_read_perms(client, all_data, request,
                     query_fixture_names, result_fixture_names):
@@ -143,4 +193,5 @@ def test_read_perms(client, all_data, request,
     response_data = response.json()
     expected_results = [request.getfixturevalue(name) for name in result_fixture_names]
     assert len(response_data["results"]) == len(expected_results)
-    assert all(result in response_data["results"] for result in expected_results)
+    for result in expected_results:
+        assert result in response_data["results"]
