@@ -59,5 +59,6 @@ class InMemoryBackend(PerObjectPermissionBackend):
                object_uuids: Iterable[UUID] = None):
 
         pred = _filter_pred(subject_uuids, predicates, object_uuids)
-        to_delete = filter(pred, self._data)
+        to_delete = set(filter(pred, self._data))
         self._data = self._data.difference(to_delete)
+        return to_delete

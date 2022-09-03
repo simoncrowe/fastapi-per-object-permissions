@@ -330,8 +330,10 @@ def test_delete_subject(
         )
     )
 
-    backend.delete(subject_uuids=[subject_one_uuid])
+    deleted = backend.delete(subject_uuids=[subject_one_uuid])
 
+    expected_deleted = {subject_one_read_object_A, subject_one_read_object_B}
+    assert deleted == expected_deleted
     assert set(backend) == {subject_two_write_object_C, subject_three_write_object_A}
 
 
@@ -349,8 +351,10 @@ def test_delete_predicate(
         )
     )
 
-    backend.delete(predicates=[read])
+    deleted = backend.delete(predicates=[read])
 
+    expected_deleted = {subject_one_read_object_A}
+    assert deleted == expected_deleted
     assert set(backend) == {subject_one_delete_object_C, subject_three_write_object_A}
 
 
@@ -368,8 +372,10 @@ def test_delete_object(
         )
     )
 
-    backend.delete(object_uuids=[object_A_uuid])
+    deleted = backend.delete(object_uuids=[object_A_uuid])
 
+    expected_deleted = {subject_one_read_object_A}
+    assert deleted == expected_deleted
     assert set(backend) == {subject_one_read_object_B, subject_one_delete_object_C}
 
 
@@ -404,10 +410,12 @@ def test_delete_based_on_subject_predicate_and_object(
         )
     )
 
-    backend.delete(subject_uuids=[subject_one_uuid],
-                   predicates=[write, delete],
-                   object_uuids=[object_A_uuid])
+    deleted = backend.delete(subject_uuids=[subject_one_uuid],
+                             predicates=[write, delete],
+                             object_uuids=[object_A_uuid])
 
+    expected_deleted = {subject_one_delete_object_A, subject_one_write_object_A}
+    assert deleted == expected_deleted
     assert set(backend) == {
         subject_one_delete_object_C,
         subject_one_read_object_A,
