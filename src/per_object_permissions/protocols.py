@@ -28,7 +28,7 @@ class PerObjectPermissionBackend(Protocol):
     def delete(self,
                subject_uuids: Iterable[UUID] = None,
                predicates: Iterable[str] = None,
-               object_uuids: Iterable[UUID] = None):
+               object_uuids: Iterable[UUID] = None) -> Iterable[PermTriple]:
         """Delete permission triples for any combination or subjects, objects and predicates.
 
         If no arguments are passed in, all permission triples will be deleted.

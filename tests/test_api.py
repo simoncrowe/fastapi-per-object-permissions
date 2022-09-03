@@ -125,7 +125,7 @@ def all_data(
 def test_create_perm(client, subject_one_read_object_A_data):
     payload = [subject_one_read_object_A_data]
 
-    response = client.post("/create_perms", json=payload)
+    response = client.post("create-perms", json=payload)
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"created": [subject_one_read_object_A_data]}
@@ -138,7 +138,7 @@ def test_create_two_perms(
 ):
     payload = [subject_one_read_object_A_data, subject_one_write_object_A_data]
 
-    response = client.post("/create_perms", json=payload)
+    response = client.post("create-perms", json=payload)
 
     assert response.status_code == HTTPStatus.OK
     response_data = response.json()
@@ -183,11 +183,11 @@ def query_key_values_from_fixture_names(request: pytest.FixtureRequest,
 ])
 def test_read_perms(client, all_data, request,
                     query_fixture_names, result_fixture_names):
-    client.post("/create_perms", json=all_data)
+    client.post("create-perms", json=all_data)
 
     payload = dict(query_key_values_from_fixture_names(request, query_fixture_names))
 
-    response = client.post("/read_perms", json=payload)
+    response = client.post("read-perms", json=payload)
 
     assert response.status_code == HTTPStatus.OK
     response_data = response.json()
@@ -195,3 +195,44 @@ def test_read_perms(client, all_data, request,
     assert len(response_data["results"]) == len(expected_results)
     for result in expected_results:
         assert result in response_data["results"]
+
+
+@pytest.mark.parametrize("query_fixture_names,deleted_fixture_names", [
+    (
+        {"object_uuids": ["object_B_uuid"]},
+        ["subject_two_delete_object_B_data", "subject_two_read_object_B_data",
+         "subject_two_write_object_B_data", "subject_three_read_object_B_data"]
+    ),
+    (
+        {"subject_uuids": ["subject_one_uuid", "subject_two_uuid"]},
+        ["subject_one_write_object_A_data", "subject_one_write_object_A_data",
+         "subject_two_delete_object_B_data", "subject_two_read_object_B_data",
+         "subject_two_write_object_A_data", "subject_two_write_object_B_data"]
+    ),
+    (
+        {"subject_uuids": ["subject_one_uuid"], "predicates": ["read"]},
+        ["subject_one_read_object_A_data"]
+    ),
+    (
+        {"subject_uuids": ["subject_three_uuid"],
+         "predicates": ["write", "read", "delete"],
+         "object_uuids": ["object_C_uuid"]},
+        ["subject_three_read_object_C_data", "subject_three_write_object_C_data"]),
+])
+def test_delete_perms(client, all_data, request,
+                      query_fixture_names, deleted_fixture_names):
+    client.post("create-perms", json=all_data)
+
+    payload = dict(query_key_values_from_fixture_names(request, query_fixture_names))
+
+    delete_response = client.post("/delete-perms", json=payload)
+
+    assert delete_response.status_code == HTTPStatus.OK
+    response_data = delete_response.json()
+    expected_deleted = [request.getfixturevalue(name) for name in deleted_fixture_names]
+    assert len(response_data["deleted"]) == len(expected_deleted)
+    for result in expected_deleted:
+        assert result in response_data["deleted"]
+
+    read_response = client.post("/read-perms", json=payload)
+    assert len(read_response.json()["results"]) == 0

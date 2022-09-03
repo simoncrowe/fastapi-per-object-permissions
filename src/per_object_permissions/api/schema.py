@@ -22,3 +22,7 @@ class CreateResults(pydantic.BaseModel):
 
 class ReadResults(pydantic.BaseModel):
     results: List[PermTriple]
+
+
+class DeleteResults(pydantic.BaseModel):
+    deleted: List[PermTriple]
