@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Callable, Iterable, Set, Tuple
+from typing import Callable, Iterable, Set
 from uuid import UUID
 
 from per_object_permissions.protocols import (PermTriple,
@@ -31,13 +31,13 @@ def _filter_pred(subject_uuids: Iterable[UUID] = None,
 class InMemoryBackend(PerObjectPermissionBackend):
     """Stores per-object permission triples in memory."""
 
-    def __init__(self, initial_data: Iterable[Tuple[UUID, str, UUID]] = None):
+    def __init__(self, initial_data: Iterable[PermTriple] = None, **kwargs):
         self._data = set(initial_data) if initial_data else set()
 
     def __iter__(self):
         return iter(self._data)
 
-    def create(self, perms: Iterable[PermTriple]) -> Set[PermTriple]:
+    def create(self, perms: Iterable[PermTriple]) -> Set[Triple]:
         triples = [
             Triple(perm.subject_uuid, perm.predicate, perm.object_uuid)
             for perm in perms
@@ -48,7 +48,7 @@ class InMemoryBackend(PerObjectPermissionBackend):
     def read(self,
              subject_uuids: Iterable[UUID] = None,
              predicates: Iterable[str] = None,
-             object_uuids: Iterable[UUID] = None) -> Set[Tuple[UUID, str, UUID]]:
+             object_uuids: Iterable[UUID] = None) -> Set[Triple]:
 
         pred = _filter_pred(subject_uuids, predicates, object_uuids)
         return set(filter(pred, self._data))
@@ -56,7 +56,7 @@ class InMemoryBackend(PerObjectPermissionBackend):
     def delete(self,
                subject_uuids: Iterable[UUID] = None,
                predicates: Iterable[str] = None,
-               object_uuids: Iterable[UUID] = None):
+               object_uuids: Iterable[UUID] = None) -> Set[Triple]:
 
         pred = _filter_pred(subject_uuids, predicates, object_uuids)
         to_delete = set(filter(pred, self._data))

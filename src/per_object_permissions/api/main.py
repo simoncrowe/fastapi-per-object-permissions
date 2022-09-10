@@ -26,7 +26,7 @@ def get_backend() -> protocols.PerObjectPermissionBackend:
     settings = get_settings()
     module_path, class_name = settings.backend.split("::")
     backend_class = getattr(import_module(module_path), class_name)
-    return backend_class()
+    return backend_class(settings=settings)
 
 
 @app.post("/create-perms", response_model=schema.CreateResults)

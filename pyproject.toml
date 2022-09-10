@@ -11,6 +11,8 @@ fastapi = "^0.78.0"
 requests = "^2.28.0"
 uvicorn = "^0.18.2"
 pydantic = {extras = ["dotenv"], version = "^1.9.2"}
+redis = "^4.3.4"
+fakeredis = "^1.9.1"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.1.1"
