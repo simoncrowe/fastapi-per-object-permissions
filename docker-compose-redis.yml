@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+  api:
+    build:
+      context: .
+      dockerfile: src/per_object_permissions/docker/redis/Dockerfile
+    ports:
+      - 8008:8008
+    depends_on:
+      - redis
