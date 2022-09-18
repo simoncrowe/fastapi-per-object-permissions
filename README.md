@@ -23,5 +23,5 @@ Different configurations of the app can be run using docker-compose files in the
 docker-compose -f docker-compose-in-memory.yml up
 ```
 
-Once the image is built and the container is running, you should be
+Once the image is built and the containers are running, you should be
 able to read the Swagger docs at http://127.0.0.1:8008/docs
