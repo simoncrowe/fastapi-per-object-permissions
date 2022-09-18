@@ -21,57 +21,57 @@ def settings():
 
 @pytest.fixture(scope="module")
 def subject_one_read_object_A(subject_one_uuid, read, object_A_uuid):
-    return Triple(subject_one_uuid, read, object_A_uuid)
+    return Triple(str(subject_one_uuid), read, str(object_A_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_one_write_object_A(subject_one_uuid, write, object_A_uuid):
-    return Triple(subject_one_uuid, write, object_A_uuid)
+    return Triple(str(subject_one_uuid), write, str(object_A_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_one_delete_object_A(subject_one_uuid, delete, object_A_uuid):
-    return Triple(subject_one_uuid, delete, object_A_uuid)
+    return Triple(str(subject_one_uuid), delete, str(object_A_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_one_read_object_B(subject_one_uuid, read, object_B_uuid):
-    return Triple(subject_one_uuid, read, object_B_uuid)
+    return Triple(str(subject_one_uuid), read, str(object_B_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_one_delete_object_C(subject_one_uuid, delete, object_C_uuid):
-    return Triple(subject_one_uuid, delete, object_C_uuid)
+    return Triple(str(subject_one_uuid), delete, str(object_C_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_two_read_object_A(subject_two_uuid, read, object_A_uuid):
-    return Triple(subject_two_uuid, read, object_A_uuid)
+    return Triple(str(subject_two_uuid), read, str(object_A_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_two_write_object_A(subject_two_uuid, write, object_A_uuid):
-    return Triple(subject_two_uuid, write, object_A_uuid)
+    return Triple(str(subject_two_uuid), write, str(object_A_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_two_write_object_B(subject_two_uuid, write, object_B_uuid):
-    return Triple(subject_two_uuid, write, object_B_uuid)
+    return Triple(str(subject_two_uuid), write, str(object_B_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_two_write_object_C(subject_two_uuid, write, object_C_uuid):
-    return Triple(subject_two_uuid, write, object_C_uuid)
+    return Triple(str(subject_two_uuid), write, str(object_C_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_three_read_object_A(subject_three_uuid, read, object_A_uuid):
-    return Triple(subject_three_uuid, read, object_A_uuid)
+    return Triple(str(subject_three_uuid), read, str(object_A_uuid))
 
 
 @pytest.fixture(scope="module")
 def subject_three_write_object_A(subject_three_uuid, write, object_A_uuid):
-    return Triple(subject_three_uuid, write, object_A_uuid)
+    return Triple(str(subject_three_uuid), write, str(object_A_uuid))
 
 
 def test_create_one_triple_should_be_persisted(settings, subject_one_read_object_A):
@@ -130,8 +130,8 @@ def test_read_specifying_nothing(
 
     results = backend.read()
 
-    assert results == {subject_one_read_object_A, subject_one_write_object_A,
-                       subject_one_delete_object_A, subject_two_read_object_A}
+    assert set(results) == {subject_one_read_object_A, subject_one_write_object_A,
+                            subject_one_delete_object_A, subject_two_read_object_A}
 
 
 def test_read_specifying_one_subject_uuid(
@@ -153,8 +153,8 @@ def test_read_specifying_one_subject_uuid(
 
     results = backend.read(subject_uuids=[subject_one_uuid])
 
-    assert results == {subject_one_read_object_A, subject_one_write_object_A,
-                       subject_one_delete_object_A}
+    assert set(results) == {subject_one_read_object_A, subject_one_write_object_A,
+                            subject_one_delete_object_A}
 
 
 def test_read_specifying_multiple_subject_uuids(
@@ -181,8 +181,8 @@ def test_read_specifying_multiple_subject_uuids(
 
     results = backend.read(subject_uuids=[subject_one_uuid, subject_three_uuid])
 
-    assert results == {subject_one_read_object_A, subject_one_write_object_A,
-                       subject_one_delete_object_A, subject_three_read_object_A}
+    assert set(results) == {subject_one_read_object_A, subject_one_write_object_A,
+                            subject_one_delete_object_A, subject_three_read_object_A}
 
 
 def test_read_specifying_one_predicate(
@@ -204,7 +204,7 @@ def test_read_specifying_one_predicate(
 
     results = backend.read(predicates=[read])
 
-    assert results == {subject_one_read_object_A, subject_two_read_object_A}
+    assert set(results) == {subject_one_read_object_A, subject_two_read_object_A}
 
 
 def test_read_specifying_multiple_predicates(
@@ -235,8 +235,8 @@ def test_read_specifying_multiple_predicates(
 
     results = backend.read(predicates=[write, delete])
 
-    assert results == {subject_one_write_object_A, subject_one_delete_object_A,
-                       subject_two_write_object_A, subject_three_write_object_A}
+    assert set(results) == {subject_one_write_object_A, subject_one_delete_object_A,
+                            subject_two_write_object_A, subject_three_write_object_A}
 
 
 def test_read_specifying_single_object_uuid(
@@ -256,7 +256,7 @@ def test_read_specifying_single_object_uuid(
 
     results = backend.read(object_uuids=[object_B_uuid])
 
-    assert results == {subject_two_write_object_B}
+    assert set(results) == {subject_two_write_object_B}
 
 
 def test_read_specifying_multiple_object_uuids(
@@ -281,7 +281,7 @@ def test_read_specifying_multiple_object_uuids(
 
     results = backend.read(object_uuids=[object_A_uuid, object_C_uuid])
 
-    assert results == {subject_one_read_object_A, subject_one_delete_object_C}
+    assert set(results) == {subject_one_read_object_A, subject_one_delete_object_C}
 
 
 def test_read_specifying_object_uuids_and_predicate(
@@ -308,7 +308,7 @@ def test_read_specifying_object_uuids_and_predicate(
     results = backend.read(object_uuids=[object_A_uuid, object_C_uuid],
                            predicates=[delete])
 
-    assert results == {subject_one_delete_object_C}
+    assert set(results) == {subject_one_delete_object_C}
 
 
 def test_read_specifying_object_uuids_subject_uuids_and_predicates(
@@ -349,9 +349,9 @@ def test_read_specifying_object_uuids_subject_uuids_and_predicates(
                            predicates=[read, write],
                            object_uuids=[object_A_uuid, object_C_uuid])
 
-    assert results == {subject_one_read_object_A, subject_one_write_object_A,
-                       subject_two_read_object_A, subject_two_write_object_A,
-                       subject_two_write_object_C}
+    assert set(results) == {subject_one_read_object_A, subject_one_write_object_A,
+                            subject_two_read_object_A, subject_two_write_object_A,
+                            subject_two_write_object_C}
 
 
 def test_delete_subject(
