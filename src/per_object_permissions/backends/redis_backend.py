@@ -15,7 +15,8 @@ class RedisBackend(PerObjectPermissionBackend):
 
     Predicates are keyed by subject-object tuples.
 
-    Searching by all three elements is around 0(N) as no hash tables are used.
+    Searching by any of the three elements is around O(N)
+    as no hash tables are used.
     """
 
     def __init__(self, initial_data: Iterable[PermTriple] = None,
