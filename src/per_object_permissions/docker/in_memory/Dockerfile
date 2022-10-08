@@ -3,9 +3,9 @@ FROM python:3.10-slim
 WORKDIR /code
 
 COPY poetry.lock pyproject.toml /code/
-RUN pip install poetry==1.1.13 && \
+RUN pip install poetry==1.2.0 && \
     poetry config virtualenvs.create false && \
-    poetry install --no-dev
+    poetry install --only main
 
 COPY src/ /code/
 COPY src/per_object_permissions/docker/in_memory/env /code/.env

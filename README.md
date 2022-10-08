@@ -15,9 +15,10 @@ universally unique identifiers make it possible to populate per-object permissio
 The simplicity of the data structure also means that it can be persisted in many types of databases
 including graph and key-value.
 
-# Testing and Running
+# Running
 
-Different configurations of the app can be run using docker-compose files in the root of this repository. For example:
+Different configurations of the app can be run using
+docker-compose files in the root of this repository. For example:
 
 ```shell
 docker-compose -f docker-compose-in-memory.yml up
@@ -25,3 +26,12 @@ docker-compose -f docker-compose-in-memory.yml up
 
 Once the image is built and the containers are running, you should be
 able to read the Swagger docs at http://127.0.0.1:8008/docs
+
+# Testing
+
+The integration tests are also run using docker compose. For example,
+this will run the integration tests against the Redis backend:
+
+```shell
+docker-compose -f docker-compose-redis-tests.yml up --build --renew-anon-volume
+```
