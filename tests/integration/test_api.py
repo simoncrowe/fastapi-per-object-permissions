@@ -97,3 +97,35 @@ def test_create_a_hundred_thousand(a_hundred_thousand_triples_data):
     expected_triples = set(make_hashable(triple) for triple in data)
     actual_triples = set(make_hashable(triple) for triple in response.json()["created"])
     assert actual_triples == expected_triples
+
+
+def test_create_and_read_a_hundred_thousand(a_hundred_thousand_triples_data):
+    data = a_hundred_thousand_triples_data
+
+    create_response = requests.post(CREATE_URL, json=data)
+
+    assert create_response.status_code == HTTPStatus.OK
+
+    read_response = requests.post(READ_URL, json={})
+
+    assert read_response.status_code == HTTPStatus.OK
+    expected_triples = set(make_hashable(triple) for triple in data)
+    actual_triples = set(make_hashable(triple)
+                         for triple in read_response.json()["results"])
+    assert actual_triples == expected_triples
+
+
+def test_create_and_delete_a_hundred_thousand(a_hundred_thousand_triples_data):
+    data = a_hundred_thousand_triples_data
+
+    create_response = requests.post(CREATE_URL, json=data)
+
+    assert create_response.status_code == HTTPStatus.OK
+
+    delete_response = requests.post(DELETE_URL, json={})
+
+    assert delete_response.status_code == HTTPStatus.OK
+    expected_triples = set(make_hashable(triple) for triple in data)
+    actual_triples = set(make_hashable(triple)
+                         for triple in delete_response.json()["deleted"])
+    assert actual_triples == expected_triples
