@@ -5,7 +5,7 @@ from typing import Iterable, Iterator, Set
 from uuid import UUID
 
 import psycopg2
-from psycopg2.extras import execute_batch
+from psycopg2.extras import execute_batch, register_uuid
 
 from per_object_permissions.protocols import PermTriple
 
@@ -23,11 +23,22 @@ def _where_clause_parts(subject_uuids: Iterable[UUID] = None,
                         predicates: Iterable[str] = None,
                         object_uuids: Iterable[UUID] = None) -> Iterator[str]:
     if subject_uuids:
-        yield "subject_id IN %s"
+        yield "subject_uuid IN %s", tuple(subject_uuids)
     if predicates:
-        yield "predicate IN %s"
+        yield "predicate IN %s", predicates
     if object_uuids:
-        yield "object_uuid IN %s"
+        yield "object_uuid IN %s", tuple(object_uuids)
+
+
+def build_where_clause(
+    subject_uuids: Iterable[UUID] = None,
+    predicates: Iterable[str] = None,
+    object_uuids: Iterable[UUID] = None
+) -> tuple[tuple[str], tuple[str]]:
+    parts = list(_where_clause_parts(subject_uuids, predicates, object_uuids))
+    if not parts:
+        return (), ()
+    return tuple(zip(*parts))
 
 
 class PostgresBackend:
@@ -41,6 +52,8 @@ class PostgresBackend:
         self._db_name = settings.postgres_dbname
         self._db_user = settings.postgres_user
         self._db_password = settings.postgres_password
+
+        register_uuid()
 
         ensure_table_query = _load_query("ensure_table_exists.sql")
         with self._make_connection() as connection:
@@ -74,16 +87,15 @@ class PostgresBackend:
              subject_uuids: Iterable[UUID] = None,
              predicates: Iterable[str] = None,
              object_uuids: Iterable[UUID] = None) -> Set[Triple]:
-
         with self._make_connection() as connection:
             select_clause = "SELECT subject_uuid, predicate, object_uuid FROM perms"
-            where_clause_parts = list(_where_clause_parts(subject_uuids,
-                                                          predicates,
-                                                          object_uuids))
-            if where_clause_parts:
-                where_clause = f"WHERE {' AND '.join(where_clause_parts)}"
+            where_conditions, where_values = build_where_clause(subject_uuids,
+                                                                predicates,
+                                                                object_uuids)
+            if where_conditions:
+                where_clause = f"WHERE {' AND '.join(where_conditions)}"
                 with connection.cursor() as cursor:
-                    cursor.execute(f"{select_clause} {where_clause};")
+                    cursor.execute(f"{select_clause} {where_clause};", where_values)
                     return set(Triple(*row) for row in cursor.fetchall())
             else:
                 with connection.cursor() as cursor:
@@ -98,13 +110,14 @@ class PostgresBackend:
         with self._make_connection() as connection:
             delete_clause = "DELETE FROM perms"
             returning_clause = "RETURNING subject_uuid, predicate, object_uuid"
-            where_clause_parts = list(_where_clause_parts(subject_uuids,
-                                                          predicates,
-                                                          object_uuids))
-            if where_clause_parts:
-                where_clause = f"WHERE {' AND '.join(where_clause_parts)}"
+
+            where_conditions, where_values = build_where_clause(subject_uuids,
+                                                                predicates,
+                                                                object_uuids)
+            if where_conditions:
+                where_clause = f"WHERE {' AND '.join(where_conditions)}"
                 with connection.cursor() as cursor:
-                    cursor.execute(f"{delete_clause} {where_clause} {returning_clause};")
+                    cursor.execute(f"{delete_clause} {where_clause} {returning_clause};", where_values)
                     return set(Triple(*row) for row in cursor.fetchall())
             else:
                 with connection.cursor() as cursor:
