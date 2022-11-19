@@ -25,7 +25,7 @@ def _where_clause_parts(subject_uuids: Iterable[UUID] = None,
     if subject_uuids:
         yield "subject_uuid IN %s", tuple(subject_uuids)
     if predicates:
-        yield "predicate IN %s", predicates
+        yield "predicate IN %s", tuple(predicates)
     if object_uuids:
         yield "object_uuid IN %s", tuple(object_uuids)
 
