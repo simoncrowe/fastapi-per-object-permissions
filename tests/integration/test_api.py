@@ -392,3 +392,88 @@ def test_delete_filter_by_multiple_object_uuids(object_uuids,
 
     assert delete_response.status_code == HTTPStatus.OK
     assert len(delete_response.json()["deleted"]) == expected_result_count
+
+
+def test_delete_filter_by_predicate(predicates, triples_created):
+    """Test deleting triples, filtered by a predicate."""
+    delete_payload = {"predicates": predicates[:1]}
+
+    delete_response = requests.post(DELETE_URL, json=delete_payload)
+
+    assert delete_response.status_code == HTTPStatus.OK
+    assert len(delete_response.json()["deleted"]) == 10000
+
+
+def test_delete_filter_by_many_predicates(predicates, triples_created):
+    """Test deleting triples, filtered by three predicates."""
+    delete_payload = {"predicates": predicates[:3]}
+
+    delete_response = requests.post(DELETE_URL, json=delete_payload)
+
+    assert delete_response.status_code == HTTPStatus.OK
+    assert len(delete_response.json()["deleted"]) == 30000
+
+
+def test_delete_filter_by_predicate_and_object_uuid(predicates,
+                                                    object_uuids,
+                                                    triples_created):
+    """Test deleting triples, filtered by a predicate and object UUID."""
+    delete_payload = {"predicates": predicates[:1],
+                      "object_uuids": object_uuids[49:50]}
+
+    delete_response = requests.post(DELETE_URL, json=delete_payload)
+
+    assert delete_response.status_code == HTTPStatus.OK
+    assert len(delete_response.json()["deleted"]) == 100
+
+
+def test_delete_filter_by_predicate_and_nonexistent_object_uuid(predicates,
+                                                                triples_created):
+    """Test deleting triples, filtered by a predicate and nonexistent object UUID."""
+    delete_payload = {"predicates": predicates[:1],
+                      "object_uuids": [str(uuid.uuid4())]}
+
+    delete_response = requests.post(DELETE_URL, json=delete_payload)
+
+    assert delete_response.status_code == HTTPStatus.OK
+    assert len(delete_response.json()["deleted"]) == 0
+
+
+def test_delete_filter_by_predicate_and_nonexistent_subject_uuid(predicates,
+                                                                 triples_created):
+    """Test deleting triples, filtered by a predicate and nonexistent subject UUID."""
+    delete_payload = {"predicates": predicates[:1],
+                      "subject_uuids": [str(uuid.uuid4())]}
+
+    delete_response = requests.post(DELETE_URL, json=delete_payload)
+
+    assert delete_response.status_code == HTTPStatus.OK
+    assert len(delete_response.json()["deleted"]) == 0
+
+
+def test_delete_filter_by_predicate_and_subject_uuid(predicates,
+                                                     subject_uuids,
+                                                     triples_created):
+    """Test deleting triples, filtered by a predicate and subject UUID."""
+    delete_payload = {"predicates": predicates[:1],
+                      "subject_uuids": subject_uuids[49:50]}
+
+    delete_response = requests.post(DELETE_URL, json=delete_payload)
+
+    assert delete_response.status_code == HTTPStatus.OK
+    assert len(delete_response.json()["deleted"]) == 100
+
+
+def test_delete_filter_by_predicate_subject_and_object_uuid(predicates,
+                                                            subject_uuids,
+                                                            object_uuids,
+                                                            triples_created):
+    """Test deleting triples, filtered by a predicate subject UUID and object UUID."""
+    delete_payload = {"predicates": predicates[:1],
+                      "subject_uuids": subject_uuids[49:50],
+                      "object_uuids": object_uuids[49:50]}
+
+    delete_response = requests.post(DELETE_URL, json=delete_payload)
+
+    assert delete_response.status_code == HTTPStatus.OK
+    assert len(delete_response.json()["deleted"]) == 1

@@ -9,4 +9,4 @@ RUN pip install poetry==1.2.0 && \
 
 COPY tests/ /tests
 
-CMD ["pytest", "-v", "--durations=0", "--random-order", "/tests/integration/test_api.py::test_read_filter_by_predicate_and_nonexistent_subject_uuid"]
+CMD ["pytest", "-v", "--durations=0", "--random-order", "/tests/integration/test_api.py"]
