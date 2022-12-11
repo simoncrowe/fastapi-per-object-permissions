@@ -3,7 +3,7 @@
 These tests serve two purposes:
 - Ensuring that all the backend integrate well with the web service.
 - Giving some idea idea of comparative performance of the backends
-  as some tests create a moderately large number of records.
+  as some tests work with a moderately large number of records.
 """
 import uuid
 from http import HTTPStatus
@@ -116,7 +116,7 @@ def test_create_and_delete_one(subject_one_read_object_A_data):
     assert read_response.json() == {"results": []}
 
 
-def test_create_a_hundred_thousand(triples_data):
+def test_create_many(triples_data):
     data = triples_data
 
     response = requests.post(CREATE_URL, json=data)
@@ -127,7 +127,7 @@ def test_create_a_hundred_thousand(triples_data):
     assert actual_triples == expected_triples
 
 
-def test_create_and_read_a_hundred_thousand(triples_data):
+def test_create_and_read_many(triples_data):
     data = triples_data
 
     create_response = requests.post(CREATE_URL, json=data)
@@ -143,7 +143,7 @@ def test_create_and_read_a_hundred_thousand(triples_data):
     assert actual_triples == expected_triples
 
 
-def test_create_and_delete_a_hundred_thousand(triples_data):
+def test_create_and_delete_many(triples_data):
     data = triples_data
 
     create_response = requests.post(CREATE_URL, json=data)
