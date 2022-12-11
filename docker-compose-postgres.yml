@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: fastapi-app
+      POSTGRES_PASSWORD: not-a-real-password
+      POSTGRES_DB: per_object_perms
+  api:
+    build:
+      context: .
+      dockerfile: src/per_object_permissions/docker/postgres/Dockerfile
+    ports:
+      - 8008:8008
+    depends_on:
+      - postgres
