@@ -9,4 +9,4 @@ RUN pip install poetry==1.2.0 && \
 
 COPY tests/ /tests
 
-CMD ["pytest", "-vvv", "--durations=0", "--random-order", "/tests/integration/test_api.py"]
+CMD ["pytest", "-v", "--durations=0", "--random-order", "/tests/integration/test_api.py"]

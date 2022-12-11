@@ -1,25 +1,25 @@
 from collections import namedtuple
-from typing import Generator, Iterable
+from typing import Iterable, Iterator
 from uuid import UUID
 
 import redis
 
-from per_object_permissions.protocols import (PermTriple,
-                                              PerObjectPermissionBackend)
+from per_object_permissions.protocols import PermTriple
 
 Triple = namedtuple("PermTriple", ["subject_uuid", "predicate", "object_uuid"])
 
 
-class RedisBackend(PerObjectPermissionBackend):
+class RedisBackend:
     """Stores per-object permission triples in Redis.
 
     Predicates are keyed by subject-object tuples.
 
-    Searching by all three elements is around 0(N) as no hash tables are used.
+    Searching by any of the three elements is around O(N)
+    as no hash tables are used.
     """
 
-    def __init__(self, initial_data: Iterable[PermTriple] = None,
-                 settings=None, client_class=redis.Redis, **kwargs):
+    def __init__(self, settings, initial_data: Iterable[PermTriple] = None,
+                 client_class=redis.Redis, **kwargs):
         self._client = client_class(host=settings.redis_host)
         if initial_data:
             self.create(initial_data)
@@ -27,7 +27,7 @@ class RedisBackend(PerObjectPermissionBackend):
     def __iter__(self):
         return self.read()
 
-    def create(self, perms: Iterable[PermTriple]) -> Generator[Triple, None, None]:
+    def create(self, perms: Iterable[PermTriple]) -> Iterator[Triple]:
         def new_triples():
             for perm in perms:
                 self._client.sadd(f"perms:{perm.subject_uuid}:{perm.object_uuid}", perm.predicate)
@@ -39,7 +39,7 @@ class RedisBackend(PerObjectPermissionBackend):
     def read(self,
              subject_uuids: Iterable[UUID] = None,
              predicates: Iterable[str] = None,
-             object_uuids: Iterable[UUID] = None) -> Generator[Triple, None, None]:
+             object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
         if subject_uuids:
             requested_subject_uuids = {str(subject_uuid)

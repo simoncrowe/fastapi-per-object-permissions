@@ -2,8 +2,7 @@ from collections import namedtuple
 from typing import Callable, Iterable, Set
 from uuid import UUID
 
-from per_object_permissions.protocols import (PermTriple,
-                                              PerObjectPermissionBackend)
+from per_object_permissions.protocols import PermTriple
 
 Triple = namedtuple("PermTriple", ["subject_uuid", "predicate", "object_uuid"])
 
@@ -28,7 +27,7 @@ def _filter_pred(subject_uuids: Iterable[UUID] = None,
     return pred
 
 
-class InMemoryBackend(PerObjectPermissionBackend):
+class InMemoryBackend:
     """Stores per-object permission triples in memory."""
 
     def __init__(self, initial_data: Iterable[PermTriple] = None, **kwargs):
