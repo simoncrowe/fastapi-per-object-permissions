@@ -36,7 +36,7 @@ class InMemoryBackend:
     def __iter__(self):
         return iter(self._data)
 
-    def create(self, perms: Iterable[PermTriple]) -> Set[Triple]:
+    async def create(self, perms: Iterable[PermTriple]) -> Set[Triple]:
         triples = [
             Triple(perm.subject_uuid, perm.predicate, perm.object_uuid)
             for perm in perms
@@ -44,18 +44,18 @@ class InMemoryBackend:
         self._data.update(triples)
         return triples
 
-    def read(self,
-             subject_uuids: Iterable[UUID] = None,
-             predicates: Iterable[str] = None,
-             object_uuids: Iterable[UUID] = None) -> Set[Triple]:
+    async def read(self,
+                   subject_uuids: Iterable[UUID] = None,
+                   predicates: Iterable[str] = None,
+                   object_uuids: Iterable[UUID] = None) -> Set[Triple]:
 
         pred = _filter_pred(subject_uuids, predicates, object_uuids)
         return set(filter(pred, self._data))
 
-    def delete(self,
-               subject_uuids: Iterable[UUID] = None,
-               predicates: Iterable[str] = None,
-               object_uuids: Iterable[UUID] = None) -> Set[Triple]:
+    async def delete(self,
+                     subject_uuids: Iterable[UUID] = None,
+                     predicates: Iterable[str] = None,
+                     object_uuids: Iterable[UUID] = None) -> Set[Triple]:
 
         pred = _filter_pred(subject_uuids, predicates, object_uuids)
         to_delete = set(filter(pred, self._data))
