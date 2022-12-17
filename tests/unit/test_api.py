@@ -6,9 +6,9 @@ from fastapi import testclient
 from per_object_permissions.api import main
 
 
-def teardown_function(function):
+async def teardown_function(function):
     """Clear data from the cached in-memory backend."""
-    main.get_backend().delete()
+    await main.get_backend().delete()
 
 
 @pytest.fixture(scope="module")
