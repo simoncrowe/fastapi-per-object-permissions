@@ -1,22 +1,25 @@
 version: '3.8'
 
 services:
-  redis:
-    image: redis:alpine
+  mongo:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: fastapi-app
+      MONGO_INITDB_ROOT_PASSWORD: not-a-real-password
   api:
     build:
       context: .
-      dockerfile: src/per_object_permissions/docker/redis/Dockerfile
+      dockerfile: src/per_object_permissions/docker/mongodb/Dockerfile
     ports:
       - 8008:8008
     depends_on:
-      - redis
+      - mongo
   test:
     build:
       context: .
       dockerfile: tests/integration/Dockerfile
     environment:
-      - BACKEND_NAME=redis
+      - BACKEND_NAME=mongodb
     volumes:
       - ./test_output/:/test_output
     depends_on:

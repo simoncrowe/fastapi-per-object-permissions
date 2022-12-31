@@ -11,5 +11,9 @@ class Settings(pydantic.BaseSettings):
     postgres_user: str = "username"
     postgres_password: str = "password"
 
+    mongo_host: str = "mongo"
+    mongo_user: str = "username"
+    mongo_password: str = "password"
+
     class Config:
         env_file = ".env"

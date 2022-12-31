@@ -134,3 +134,6 @@ cspell.config.yaml
 
 # Vim
 *.swp
+
+# Test results used by compare_test_durations.py
+test_output
