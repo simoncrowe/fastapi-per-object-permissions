@@ -32,7 +32,7 @@ def query_key_values(subject_uuids: Iterable[UUID] = None,
 
 
 class MongoBackend:
-    """Stores per-object permission triples in MongDB."""
+    """Stores per-object permission triples in MongoDB."""
 
     def __init__(self, settings, **kwargs):
         self._get_client = client_factory(settings.mongo_user,

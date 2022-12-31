@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: fastapi-app
+      MONGO_INITDB_ROOT_PASSWORD: not-a-real-password
+  api:
+    build:
+      context: .
+      dockerfile: src/per_object_permissions/docker/mongodb/Dockerfile
+    ports:
+      - 8008:8008
+    depends_on:
+      - mongo
