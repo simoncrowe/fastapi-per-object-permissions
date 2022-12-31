@@ -42,9 +42,9 @@ class MongoBackend:
 
     async def _ensure_indexes(self):
         if not self._indexes_created:
-            # client = self._get_client()
-            # await client.db.perms.create_index("subject_uuid")
-            # await client.db.perms.create_index("object_uuid")
+            client = self._get_client()
+            await client.db.perms.create_index("subject_uuid")
+            await client.db.perms.create_index("object_uuid")
             self._indexes_created = True
 
     async def create(self, perms: Iterable[PermTriple]) -> list[Triple]:
