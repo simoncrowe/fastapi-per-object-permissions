@@ -18,5 +18,9 @@ services:
     build:
       context: .
       dockerfile: tests/integration/Dockerfile
+    environment:
+      - BACKEND_NAME=mongodb
+    volumes:
+      - ./test_output/:/test_output
     depends_on:
       - api
