@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:latest
+    environment:
+      - NEO4J_AUTH=neo4j/not-a-real-password
+    ports:
+      - 7474:7474
+      - 7687:7687
+  api:
+    build:
+      context: .
+      dockerfile: src/per_object_permissions/docker/neo4j/Dockerfile
+    ports:
+      - 8008:8008
+    depends_on:
+      - neo4j
+  test:
+    build:
+      context: .
+      dockerfile: tests/integration/Dockerfile
+    environment:
+      - BACKEND_NAME=neo4j
+    volumes:
+      - ./test_output/:/test_output
+    depends_on:
+      - api

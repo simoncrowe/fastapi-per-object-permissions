@@ -1,0 +1,3 @@
+BACKEND="per_object_permissions.backends.neo4j_backend::Neo4jBackend"
+NEO4J_USER="neo4j"
+NEO4J_PASSWORD="not-a-real-password"

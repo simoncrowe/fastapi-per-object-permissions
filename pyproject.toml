@@ -6,7 +6,7 @@ authors = ["Simon Crowe <simon.r.crowe@protonmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 fastapi = "^0.78.0"
 requests = "^2.28.0"
 uvicorn = "^0.18.2"
@@ -32,6 +32,9 @@ psycopg = "^3.1.4"
 
 [tool.poetry.group.mongodb.dependencies]
 motor = "^3.1.1"
+
+[tool.poetry.group.neo4j.dependencies]
+neo4j = "^5.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
