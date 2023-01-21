@@ -1,11 +1,13 @@
 from collections import namedtuple
+from itertools import count
 from typing import Callable, Iterable, Iterator
-from urllib.parse import quote_plus
 from uuid import UUID
 
 from neo4j import AsyncGraphDatabase
 
 from per_object_permissions.protocols import PermTriple
+
+DB_NAME = "perms"
 
 Triple = namedtuple("PermTriple", ["subject_uuid", "predicate", "object_uuid"])
 
@@ -17,22 +19,23 @@ def driver_factory(username: str, password: str, host: str) -> Callable:
     return get_driver
 
 
-def query_key_values(subject_uuids: Iterable[UUID] = None,
-                     predicates: Iterable[str] = None,
-                     object_uuids: Iterable[UUID] = None) -> Iterator[tuple[str, str | UUID]]:
+def create_triples(tx, perms: Iterable[PermTriple]):
+    def iter_query_data():
+        counter = count()
+        node_ids = {}
+        for perm in perms:
+            subject_name = node_ids.setdefault(perm.subject_uuid, f"n{next(counter)}")
+            object_name = node_ids.setdefault(perm.object_uuid, f"n{next(counter)}")
 
-    if subject_uuids:
-        yield "subject_uuid", {"$in": subject_uuids}
+            yield (f'({subject_name} {{ uuid: "{perm.subject_uuid}" }}) '
+                   f'-[:PREDICATE {{predicate: "{perm.predicate}"}}]-> '
+                   f'({object_name} {{ uuid: "{perm.object_uuid}" }})')
 
-    if predicates:
-        yield "predicate", {"$in": predicates}
-
-    if object_uuids:
-        yield "object_uuid", {"$in": object_uuids}
+    return tx.run(f"MERGE {', '.join(iter_query_data())};")
 
 
 class Neo4jBackend:
-    """Stores per-object permission triples in MongoDB."""
+    """Stores per-object permission triples in Neo4j."""
 
     def __init__(self, settings, **kwargs):
         self._get_driver = driver_factory(settings.neo4j_user,
@@ -40,23 +43,16 @@ class Neo4jBackend:
                                           settings.neo4j_host)
         self._indexes_created = False
 
-    async def _ensure_indexes(self):
-        return
-        if not self._indexes_created:
-            driver = self._get_driver()
-            await driver.db.perms.create_index("subject_uuid")
-            await driver.db.perms.create_index("object_uuid")
-            self._indexes_created = True
-
     async def create(self, perms: Iterable[PermTriple]) -> list[Triple]:
 
-        await self._ensure_indexes()
         async with self._get_driver() as driver:
+            async with driver.session() as session:
+                await session.execute_write(create_triples, perms=perms)
 
-            new_perms = [Triple(subject_uuid=perm.subject_uuid,
-                                predicate=perm.predicate,
-                                object_uuid=perm.object_uuid)
-                         for perm in perms]
+        new_perms = [Triple(subject_uuid=perm.subject_uuid,
+                            predicate=perm.predicate,
+                            object_uuid=perm.object_uuid)
+                     for perm in perms]
         return new_perms
 
     async def read(self,
@@ -64,20 +60,15 @@ class Neo4jBackend:
                    predicates: Iterable[str] = None,
                    object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
-        await self._ensure_indexes()
         async with self._get_driver() as driver:
-            query = dict(query_key_values(subject_uuids, predicates, object_uuids))
-            results = list()
-            async for perm_doc in driver.db.perms.find(query):
-                del perm_doc["_id"]
-                results.append(Triple(**perm_doc))
-        return results
+            async with driver.session() as session: # noqa
+                pass
 
     async def delete(self,
                      subject_uuids: Iterable[UUID] = None,
                      predicates: Iterable[str] = None,
                      object_uuids: Iterable[UUID] = None) -> list[PermTriple]:
 
-        await self._ensure_indexes()
         async with self._get_driver() as driver:
-            pass
+            async with driver.session() as session: # noqa
+                pass
