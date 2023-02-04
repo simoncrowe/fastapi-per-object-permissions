@@ -38,11 +38,11 @@ def _iter_where_query_parts(subject_uuids: Iterable[UUID] = None,
                             predicates: Iterable[str] = None,
                             object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
     if subject_uuids:
-        yield f"subject.uuid IN {subject_uuids}"
+        yield f"subject.uuid IN {[str(uuid) for uuid in subject_uuids]}"
     if predicates:
         yield f"edge.predicate IN {predicates}"
     if object_uuids:
-        yield f"object.uuid IN {object_uuids}"
+        yield f"object.uuid IN {[str(uuid) for uuid in object_uuids]}"
 
 
 async def read_triples(tx,
@@ -50,11 +50,11 @@ async def read_triples(tx,
                        predicates: Iterable[str] = None,
                        object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
-    path = "(subject)-[edge:PREDICATE]-(object)"
+    path = "(subject)-[edge:PREDICATE]->(object)"
     conditions = " AND ".join(_iter_where_query_parts(subject_uuids,
                                                       predicates,
                                                       object_uuids))
-    where_clause = "WHERE {conditions}" if conditions else ""
+    where_clause = f"WHERE {conditions}" if conditions else ""
     output = ("subject.uuid AS subject_uuid, "
               "edge.predicate AS predicate, "
               "object.uuid AS object_uuid ")
@@ -69,12 +69,12 @@ async def delete_triples(tx,
                          predicates: Iterable[str] = None,
                          object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
-    path = "(subject)-[edge:PREDICATE]-(object)"
+    path = "(subject)-[edge:PREDICATE]->(object)"
     conditions = " AND ".join(_iter_where_query_parts(subject_uuids,
                                                       predicates,
                                                       object_uuids))
     where_clause = "WHERE {conditions}" if conditions else ""
-    with_clause = "WITH properties(edge) as deleted_edge"
+    with_clause = "WITH subject, object, edge, properties(edge) as deleted_edge"
     delete_clause = "DELETE edge"
     output = ("subject.uuid AS subject_uuid, "
               "deleted_edge.predicate AS predicate, "
