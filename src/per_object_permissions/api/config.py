@@ -15,5 +15,9 @@ class Settings(pydantic.BaseSettings):
     mongo_user: str = "username"
     mongo_password: str = "password"
 
+    neo4j_host: str = "neo4j"
+    neo4j_user: str = "user"
+    neo4j_password: str = "password"
+
     class Config:
         env_file = ".env"
