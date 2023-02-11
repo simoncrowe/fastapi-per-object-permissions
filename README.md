@@ -45,15 +45,16 @@ The `compare_test_durations.py` script can be used to print a comparison of
 each database backend's latest durations for each test.
 
 Below is an example for the tests executed on a 2019 ThinkPad X1 Carbon
-running the Ubuntu OS. The relatively simple MongoDB implementation's performance
+running the Ubuntu OS. 
+
+The relatively simple MongoDB implementation's overall performance 
 is beaten only by the in-memory implementation based on python sets.
 The neo4j implementation struggles with inserting large numbers
 of nodes and edges but otherwise generally outperforms the redis
 implementation.
 
 (This isn't intended as an objective database benchmark, but rather
-an rough exercise in curiosity based on quick implementations
-of the same interface.)
+an exercise in curiosity based on quick implementations of the same interface.)
 ```
 FASTEST DURATIONS FOR EACH TEST
 
