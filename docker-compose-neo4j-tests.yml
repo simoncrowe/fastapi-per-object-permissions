@@ -8,6 +8,12 @@ services:
     ports:
       - 7474:7474
       - 7687:7687
+    healthcheck:
+      test: wget http://localhost:7474 || exit 1
+      interval: 1s
+      timeout: 10s
+      retries: 20
+      start_period: 3s
   api:
     build:
       context: .
@@ -15,7 +21,8 @@ services:
     ports:
       - 8008:8008
     depends_on:
-      - neo4j
+      neo4j:
+        condition: service_healthy
   test:
     build:
       context: .

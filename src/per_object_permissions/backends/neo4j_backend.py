@@ -1,8 +1,8 @@
 from collections import namedtuple
-from itertools import count
 from typing import Callable, Iterable, Iterator
 from uuid import UUID
 
+from more_itertools import chunked
 from neo4j import AsyncGraphDatabase
 
 from per_object_permissions.protocols import PermTriple
@@ -20,18 +20,22 @@ def driver_factory(username: str, password: str, host: str) -> Callable:
 
 
 async def create_triples(tx, perms: Iterable[PermTriple]):
-    def iter_query_data():
-        counter = count()
-        node_ids = {}
-        for perm in perms:
-            subject_name = node_ids.setdefault(perm.subject_uuid, f"n{next(counter)}")
-            object_name = node_ids.setdefault(perm.object_uuid, f"n{next(counter)}")
-
-            yield (f'({subject_name} {{ uuid: "{perm.subject_uuid}" }}) '
-                   f'-[:PREDICATE {{predicate: "{perm.predicate}"}}]-> '
-                   f'({object_name} {{ uuid: "{perm.object_uuid}" }})')
-
-    return await tx.run(f"MERGE {', '.join(iter_query_data())};")
+    perms_data = (
+        {"subject_uuid": str(perm.subject_uuid),
+         "predicate": perm.predicate,
+         "object_uuid": str(perm.object_uuid)}
+        for perm in perms
+    )
+    query = (
+        "UNWIND $perms as perm "
+        "MERGE "
+        "(:NODE {uuid: perm.subject_uuid})"
+        "-[:PREDICATE {predicate: perm.predicate}]->"
+        "(:NODE {uuid: perm.object_uuid })"
+    )
+    for batch_num, perms_chunk in enumerate(chunked(perms_data, 100)):
+        print(f"Creating batch {batch_num} of perms")
+        await tx.run(query, perms=perms_chunk)
 
 
 def _iter_where_query_parts(subject_uuids: Iterable[UUID] = None,
@@ -50,7 +54,7 @@ async def read_triples(tx,
                        predicates: Iterable[str] = None,
                        object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
-    path = "(subject)-[edge:PREDICATE]->(object)"
+    path = "(subject:NODE)-[edge:PREDICATE]->(object:NODE)"
     conditions = " AND ".join(_iter_where_query_parts(subject_uuids,
                                                       predicates,
                                                       object_uuids))
@@ -69,11 +73,11 @@ async def delete_triples(tx,
                          predicates: Iterable[str] = None,
                          object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
-    path = "(subject)-[edge:PREDICATE]->(object)"
+    path = "(subject:NODE)-[edge:PREDICATE]->(object:NODE)"
     conditions = " AND ".join(_iter_where_query_parts(subject_uuids,
                                                       predicates,
                                                       object_uuids))
-    where_clause = "WHERE {conditions}" if conditions else ""
+    where_clause = f"WHERE {conditions}" if conditions else ""
     with_clause = "WITH subject, object, edge, properties(edge) as deleted_edge"
     delete_clause = "DELETE edge"
     output = ("subject.uuid AS subject_uuid, "
@@ -95,7 +99,18 @@ class Neo4jBackend:
                                           settings.neo4j_host)
         self._indexes_created = False
 
+    async def _ensure_indexes(self):
+        if not self._indexes_created:
+            async with self._get_driver() as driver:
+                async with driver.session() as session:
+                    await session.run("CREATE INDEX node_index FOR (n:NODE) ON (n.uuid)")
+                    await session.run("CREATE INDEX pred_index FOR ()-[r:PREDICATE]-() "
+                                      "ON (r.predicate)")
+            self._indexes_created = True
+
     async def create(self, perms: Iterable[PermTriple]) -> list[Triple]:
+
+        await self._ensure_indexes()
 
         async with self._get_driver() as driver:
             async with driver.session() as session:
@@ -111,6 +126,8 @@ class Neo4jBackend:
                    predicates: Iterable[str] = None,
                    object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
+        await self._ensure_indexes()
+
         async with self._get_driver() as driver:
             async with driver.session() as session: # noqa
                 results = await session.execute_read(read_triples,
@@ -123,6 +140,8 @@ class Neo4jBackend:
                      subject_uuids: Iterable[UUID] = None,
                      predicates: Iterable[str] = None,
                      object_uuids: Iterable[UUID] = None) -> list[PermTriple]:
+
+        await self._ensure_indexes()
 
         async with self._get_driver() as driver:
             async with driver.session() as session: # noqa
