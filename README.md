@@ -47,7 +47,7 @@ each database backend's latest durations for each test.
 Below is an example for the tests executed on a 2019 ThinkPad X1 Carbon
 running the Ubuntu OS. The relatively simple MongoDB implementation's performance
 is beaten only by the in-memory implementation based on python sets.
-Sadly the neo4j implementation struggles with inserting large numbers
+The neo4j implementation struggles with inserting large numbers
 of nodes and edges but otherwise generally outperforms the redis
 implementation.
 
