@@ -33,20 +33,35 @@ async def create_triples(tx, perms: Iterable[PermTriple]):
         "-[:PREDICATE {predicate: perm.predicate}]->"
         "(:NODE {uuid: perm.object_uuid })"
     )
-    for batch_num, perms_chunk in enumerate(chunked(perms_data, 100)):
-        print(f"Creating batch {batch_num} of perms")
+    for perms_chunk in chunked(perms_data, 100):
         await tx.run(query, perms=perms_chunk)
 
 
-def _iter_where_query_parts(subject_uuids: Iterable[UUID] = None,
-                            predicates: Iterable[str] = None,
-                            object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
+def _where_clause_parts(subject_uuids: Iterable[UUID] = None,
+                        predicates: Iterable[str] = None,
+                        object_uuids: Iterable[UUID] = None) -> Iterator[tuple[str, list]]:
     if subject_uuids:
-        yield f"subject.uuid IN {[str(uuid) for uuid in subject_uuids]}"
+        sub_key = "subject_uuids"
+        yield f"subject.uuid IN ${sub_key}", sub_key, list(map(str, subject_uuids))
     if predicates:
-        yield f"edge.predicate IN {predicates}"
+        pred_key = "predicates"
+        yield f"edge.predicate IN ${pred_key}", pred_key, list(predicates)
     if object_uuids:
-        yield f"object.uuid IN {[str(uuid) for uuid in object_uuids]}"
+        obj_key = "object_uuids"
+        yield f"object.uuid IN ${obj_key}", obj_key, list(map(str, object_uuids))
+
+
+def build_where_clause(
+    subject_uuids: Iterable[UUID] = None,
+    predicates: Iterable[str] = None,
+    object_uuids: Iterable[UUID] = None
+) -> tuple[tuple[str], dict[str, list[str]]]:
+    parts = list(_where_clause_parts(subject_uuids, predicates, object_uuids))
+    if not parts:
+        return (), {}
+
+    conditions, data_keys, data_values = zip(*parts)
+    return conditions, dict(zip(data_keys, data_values))
 
 
 async def read_triples(tx,
@@ -55,15 +70,16 @@ async def read_triples(tx,
                        object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
     path = "(subject:NODE)-[edge:PREDICATE]->(object:NODE)"
-    conditions = " AND ".join(_iter_where_query_parts(subject_uuids,
+    where_conditions, where_data = build_where_clause(subject_uuids,
                                                       predicates,
-                                                      object_uuids))
+                                                      object_uuids)
+    conditions = " AND ".join(where_conditions)
     where_clause = f"WHERE {conditions}" if conditions else ""
     output = ("subject.uuid AS subject_uuid, "
               "edge.predicate AS predicate, "
               "object.uuid AS object_uuid ")
 
-    result = await tx.run(f"MATCH {path} {where_clause} RETURN {output}")
+    result = await tx.run(f"MATCH {path} {where_clause} RETURN {output}", where_data)
 
     return [record.data() async for record in result]
 
@@ -74,9 +90,10 @@ async def delete_triples(tx,
                          object_uuids: Iterable[UUID] = None) -> Iterator[Triple]:
 
     path = "(subject:NODE)-[edge:PREDICATE]->(object:NODE)"
-    conditions = " AND ".join(_iter_where_query_parts(subject_uuids,
+    where_conditions, where_data = build_where_clause(subject_uuids,
                                                       predicates,
-                                                      object_uuids))
+                                                      object_uuids)
+    conditions = " AND ".join(where_conditions)
     where_clause = f"WHERE {conditions}" if conditions else ""
     with_clause = "WITH subject, object, edge, properties(edge) as deleted_edge"
     delete_clause = "DELETE edge"
@@ -85,7 +102,8 @@ async def delete_triples(tx,
               "object.uuid AS object_uuid ")
 
     result = await tx.run(f"MATCH {path} {where_clause} "
-                          f"{with_clause} {delete_clause} RETURN {output}")
+                          f"{with_clause} {delete_clause} RETURN {output}",
+                          where_data)
 
     return [record.data() async for record in result]
 
