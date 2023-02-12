@@ -18,17 +18,17 @@ def main():
         for result in results:
             results_by_test[f'{result.classname}::{result.name}'].append((result.time, backend_name))
 
-    print('FASTEST DURATIONS FOR EACH TEST')
+    durations = sorted((sum(test.time for test in tests), name)
+                       for name, tests in results_by_backend.items())
+    print('BACKEND_NAME         TOTAL_DURATION')
+    for duration, backend_name in durations:
+        print(f'{backend_name: <20} {duration:0.3f} seconds')
+
+    print('\n\nFASTEST DURATIONS FOR EACH TEST')
     for test_name, results in sorted(results_by_test.items()):
         print(f'\n{test_name}')
         for time, backend in sorted(results):
             print(f'  {backend}: {time:0.3f} seconds')
-
-    durations = sorted((sum(test.time for test in tests), name)
-                       for name, tests in results_by_backend.items())
-    print('\n\nBACKEND_NAME         TOTAL_DURATION')
-    for duration, backend_name in durations:
-        print(f'{backend_name: <20} {duration:0.3f} seconds')
 
 
 if __name__ == '__main__':

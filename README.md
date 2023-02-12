@@ -45,9 +45,9 @@ The `compare_test_durations.py` script can be used to print a comparison of
 each database backend's latest durations for each test.
 
 Below is an example for the tests executed on a 2019 ThinkPad X1 Carbon
-running the Ubuntu OS. 
+running the Ubuntu OS.
 
-The relatively simple MongoDB implementation's overall performance 
+The relatively simple MongoDB implementation's overall performance
 is beaten only by the in-memory implementation based on python sets.
 The neo4j implementation struggles with inserting large numbers
 of nodes and edges but otherwise generally outperforms the redis
@@ -55,7 +55,16 @@ implementation.
 
 (This isn't intended as an objective database benchmark, but rather
 an exercise in curiosity based on quick implementations of the same interface.)
+
 ```
+BACKEND_NAME         TOTAL_DURATION
+in-memory            25.989 seconds
+mongodb              34.290 seconds
+postgres             47.667 seconds
+redis                66.377 seconds
+neo4j                636.940 seconds
+
+
 FASTEST DURATIONS FOR EACH TEST
 
 integration.test_api::test_create_and_delete_many
@@ -393,12 +402,4 @@ integration.test_api::test_read_filter_by_subject_uuid[99]
   mongodb: 0.070 seconds
   neo4j: 0.103 seconds
   redis: 0.240 seconds
-
-
-BACKEND_NAME         TOTAL_DURATION
-in-memory            25.989 seconds
-mongodb              34.290 seconds
-postgres             47.667 seconds
-redis                66.377 seconds
-neo4j                636.940 seconds
 ```
