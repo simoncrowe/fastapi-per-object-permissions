@@ -1,5 +1,3 @@
-This project is a work in progress.
-
 # Introduction
 
 The motivation for this project is partly autodidactic and partly a desire to build
