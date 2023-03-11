@@ -10,7 +10,7 @@ class PermTriple(pydantic.BaseModel):
     object_uuid: uuid.UUID
 
     class Config:
-        orm_mode = True
+        orm_mode = True  # Allows creating from object attributes using from_orm
 
 
 class PermQuery(pydantic.BaseModel):
