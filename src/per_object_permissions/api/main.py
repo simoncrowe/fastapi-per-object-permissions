@@ -33,18 +33,18 @@ def get_backend() -> protocols.PerObjectPermissionBackend:
 async def create_perms(perms: List[schema.PermTriple]):
     backend = get_backend()
     created_perms = await backend.create(perms)
-    return {"created": [perm._asdict() for perm in created_perms]}
+    return {"created": [schema.PermTriple.from_orm(perm) for perm in created_perms]}
 
 
 @app.post("/read-perms", response_model=schema.ReadResults)
 async def read_perms(query: schema.PermQuery):
     backend = get_backend()
     perms = await backend.read(**query.dict())
-    return {"results": [perm._asdict() for perm in perms]}
+    return {"results": [schema.PermTriple.from_orm(perm) for perm in perms]}
 
 
 @app.post("/delete-perms", response_model=schema.DeleteResults)
 async def delete_perms(query: schema.PermQuery):
     backend = get_backend()
     perms = await backend.delete(**query.dict())
-    return {"deleted": [perm._asdict() for perm in perms]}
+    return {"deleted": [schema.PermTriple.from_orm(perm) for perm in perms]}
